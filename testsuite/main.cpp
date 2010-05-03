@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include <iostream>
+
 
 int main( int argc, char** argv )
 {
@@ -16,6 +18,8 @@ int main( int argc, char** argv )
   kd::TreeFactory treeFactory;
 
   kd::Tree tree = treeFactory.create( points );
+
+  std::cerr << "Completed Testing" << std::endl;
 
   return 0;
 }
