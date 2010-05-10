@@ -17,7 +17,7 @@ int main( int argc, char** argv )
 
   kd::TreeFactory treeFactory;
 
-  kd::Tree tree = treeFactory.create( points );
+  kd::Tree* tree = treeFactory.create( points );
 
   std::cerr << "Completed Testing" << std::endl;
 

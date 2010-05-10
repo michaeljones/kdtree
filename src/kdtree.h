@@ -6,6 +6,7 @@ class Point2
 public:
 
   Point2( float _x, float _y ) : x( _x ), y( _y ) {}
+  Point2() : x( 0.0f ), y( 0.0f ) {}
 
 public:
 
@@ -28,7 +29,12 @@ class Tree
 {
 public:
 
-  Tree() {};
+  Tree( Node* node )
+   : m_node( node ) {}
+
+private:
+
+  Node* m_node;
 
 };
 
@@ -39,7 +45,11 @@ public:
 
   TreeFactory() {};
 
-  Tree create( const std::vector< Point2 >& points );
+  Tree* create( const std::vector< Point2 >& points );
+
+private:
+
+  Node* createSubTree( std::vector< Point2 >& points );
 
 };
 
