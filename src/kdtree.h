@@ -1,20 +1,28 @@
 
 #include <vector>
 
-class Point3 
+class Point2 
 {
 public:
 
-  Point3( float _x, float _y, float _z ) : x( _x ), y( _y ), z( _z ) {}
+  Point2( float _x, float _y ) : x( _x ), y( _y ) {}
 
 public:
 
-  float x, y, z;
+  float x, y;
 };
 
 
 namespace kd 
 {
+
+class Node
+{
+public:
+  Node() {};
+  virtual ~Node() {};
+
+};
 
 class Tree
 {
@@ -28,12 +36,14 @@ public:
 class TreeFactory
 {
 public:
+
   TreeFactory() {};
 
-  Tree create( std::vector< Point3 >& points );
+  Tree create( const std::vector< Point2 >& points );
 
 };
 
 
 }
+
 

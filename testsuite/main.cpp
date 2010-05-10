@@ -8,11 +8,11 @@
 
 int main( int argc, char** argv )
 {
-  std::vector< Point3 > points;
+  std::vector< Point2 > points;
 
   for ( unsigned int i=0; i<10; ++i )
   {
-    points.push_back( Point3( drand48(), drand48(), drand48() ) );
+    points.push_back( Point2( drand48(), drand48() ) );
   }
 
   kd::TreeFactory treeFactory;
