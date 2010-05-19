@@ -1,18 +1,10 @@
+#ifndef KDTREE
+#define KDTREE
+
+#include "Point2.h"
+#include "bounds.h"
 
 #include <vector>
-
-class Point2 
-{
-public:
-
-  Point2( float _x, float _y ) : x( _x ), y( _y ) {}
-  Point2() : x( 0.0f ), y( 0.0f ) {}
-
-public:
-
-  float x, y;
-};
-
 
 namespace kd 
 {
@@ -24,6 +16,7 @@ public:
   virtual ~Node() {};
 
 };
+
 
 class Tree
 {
@@ -43,17 +36,23 @@ class TreeFactory
 {
 public:
 
-  TreeFactory() {};
+  TreeFactory( const BoundsFactory& boundsFactory )
+  : m_boundsFactory( boundsFactory ) {};
 
   Tree* create( const std::vector< Point2 >& points );
 
 private:
 
-  Node* createSubTree( std::vector< Point2 >& points );
+  Node* createSubTree( std::vector< Point2 >& points, const Bounds& bounds );
+
+private:
+
+  const BoundsFactory m_boundsFactory;
 
 };
 
 
-}
+};
 
+#endif // KDTREE
 

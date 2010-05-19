@@ -1,17 +1,30 @@
-
 #include "kdtree.h"
 
 #include <algorithm>
+#include <vector>
 
 namespace kd
 {
 
 
-class SplitNode : public Node
+class BasicNode : public Node
 {
 public:
-  SplitNode( Point2 point, Node* left, Node* right )
-   : m_left( left ), m_right( right ), m_point( point ) {}
+
+  BasicNode( const Bounds& bounds )
+   : m_bounds( bounds ) {}
+
+private:
+
+  const Bounds m_bounds;
+
+};
+
+class SplitNode : public BasicNode
+{
+public:
+  SplitNode( const Bounds& bounds, const Point2& point, Node* left, Node* right )
+   : BasicNode( bounds ), m_left( left ), m_right( right ), m_point( point ) {}
 
 private:
 
@@ -22,27 +35,26 @@ private:
 };
 
 
-class EmptyNode : public Node
+class EmptyNode : public BasicNode
 {
 public:
-  EmptyNode() {}
+  EmptyNode( const Bounds& bounds )
+   : BasicNode( bounds ) {}
 
 };
 
-class SingleNode : public Node
+class SingleNode : public BasicNode
 {
 public:
 
-  SingleNode( const Point2& p ) : m_point( p ) {}
+  SingleNode( const Bounds& bounds, const Point2& p )
+   : BasicNode( bounds ), m_point( p ) {}
 
 private:
 
   const Point2 m_point;
 };
 
-
-typedef std::vector< Point2 > Subset;
-typedef std::pair< Node*, const Subset* > Item;
 
 
 bool cmp( const Point2 a, const Point2 b )
@@ -51,16 +63,19 @@ bool cmp( const Point2 a, const Point2 b )
 }
 
 
-Node* TreeFactory::createSubTree( Subset& subset )
+typedef std::vector< Point2 > Subset;
+typedef std::pair< Node*, Subset* > Item;
+
+Node* TreeFactory::createSubTree( Subset& subset, const Bounds& bounds )
 {
   if ( subset.size() == 0 )
   {
-    return new EmptyNode();
+    return new EmptyNode( bounds );
   }
 
   if ( subset.size() == 1 )
   {
-    return new SingleNode( subset[ 0 ] );
+    return new SingleNode( bounds, subset[ 0 ] );
   }
 
   std::sort( subset.begin(), subset.end(), cmp );
@@ -77,11 +92,14 @@ Node* TreeFactory::createSubTree( Subset& subset )
   std::copy( subset.begin(), subset.begin() + medianIdx, left->begin() );
   std::copy( subset.begin() + medianIdx + 1, subset.end(), right->begin() );
 
+  BoundsPair boundsPair = m_boundsFactory.split( bounds, medianPoint, 0 );
+
   // Recursively create subtrees
   return new SplitNode(
+      bounds,
       medianPoint,
-      createSubTree( *left ),
-      createSubTree( *right )
+      createSubTree( *left, boundsPair.first ),
+      createSubTree( *right, boundsPair.second )
       );
 }
 
@@ -90,9 +108,9 @@ Tree* TreeFactory::create( const Subset& points )
   Subset p( points );
 
   // Create the tree!
-  return new Tree( createSubTree( p ) );
+  return new Tree( createSubTree( p, m_boundsFactory.createBounds( points ) ) );
 }
 
 
-}
+};
 
