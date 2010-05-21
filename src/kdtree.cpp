@@ -6,25 +6,43 @@
 namespace kd
 {
 
-
-class BasicNode : public Node
+class Node
 {
 public:
+  Node() {};
+  virtual ~Node() {};
 
-  BasicNode( const Bounds& bounds )
-   : m_bounds( bounds ) {}
-
-private:
-
-  const Bounds m_bounds;
+  virtual NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const = 0;
 
 };
 
-class SplitNode : public BasicNode
+
+
+class SplitNode : public Node
 {
 public:
-  SplitNode( const Bounds& bounds, const Point2& point, Node* left, Node* right )
-   : BasicNode( bounds ), m_left( left ), m_right( right ), m_point( point ) {}
+  SplitNode( const Point2& point, Node* left, Node* right, const BoundsFactory& boundsFactory )
+   : m_left( left ),
+     m_right( right ),
+     m_point( point ),
+     m_boundsFactory( boundsFactory )
+     {}
+
+  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  {
+    BoundsPair boundsPair = m_boundsFactory.split( bounds, m_point, 0 );
+
+    Point2 sep = m_point - point;
+    float distanceSq = sep.lengthSquared();
+
+    if ( distanceSq < data.distanceSq )
+      data = NeighbourData( true, m_point, distanceSq );
+
+    if ( boundsPair.first.contains( point ) )
+      return m_left->nearest( point, data, boundsPair.first );
+    else
+      return m_right->nearest( point, data, boundsPair.second );
+  }
 
 private:
 
@@ -32,23 +50,42 @@ private:
   const Node* m_right;
 
   const Point2 m_point;
+  const BoundsFactory m_boundsFactory;
 };
 
 
-class EmptyNode : public BasicNode
+class EmptyNode : public Node
 {
 public:
-  EmptyNode( const Bounds& bounds )
-   : BasicNode( bounds ) {}
+  EmptyNode() {}
+
+  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  {
+    return data;
+  }
+
 
 };
 
-class SingleNode : public BasicNode
+class SingleNode : public Node
 {
 public:
 
-  SingleNode( const Bounds& bounds, const Point2& p )
-   : BasicNode( bounds ), m_point( p ) {}
+  SingleNode( const Point2& p )
+   : m_point( p ) {}
+
+  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  {
+    Point2 sep = m_point - point;
+    float distanceSq = sep.lengthSquared();
+
+    if ( distanceSq < data.distanceSq )
+      data = NeighbourData( true, m_point, distanceSq );
+
+    return data;
+  }
+
+
 
 private:
 
@@ -62,20 +99,29 @@ bool cmp( const Point2 a, const Point2 b )
   return a.x > b.x;
 }
 
+NeighbourData Tree::nearestNeighbour( Point2 point, Bounds bounds ) const
+{
+  Point2 furthest = bounds.furthestPoint( point );
+  float maxDistanceSq = furthest.x*furthest.x + furthest.y*furthest.y;
+  NeighbourData data( false, Point2( 0.0, 0.0 ), maxDistanceSq );
+
+  return m_node->nearest( point, data, bounds );
+}
+
 
 typedef std::vector< Point2 > Subset;
 typedef std::pair< Node*, Subset* > Item;
 
-Node* TreeFactory::createSubTree( Subset& subset, const Bounds& bounds )
+Node* TreeFactory::createSubTree( Subset& subset )
 {
   if ( subset.size() == 0 )
   {
-    return new EmptyNode( bounds );
+    return new EmptyNode();
   }
 
   if ( subset.size() == 1 )
   {
-    return new SingleNode( bounds, subset[ 0 ] );
+    return new SingleNode( subset[ 0 ] );
   }
 
   std::sort( subset.begin(), subset.end(), cmp );
@@ -92,14 +138,12 @@ Node* TreeFactory::createSubTree( Subset& subset, const Bounds& bounds )
   std::copy( subset.begin(), subset.begin() + medianIdx, left->begin() );
   std::copy( subset.begin() + medianIdx + 1, subset.end(), right->begin() );
 
-  BoundsPair boundsPair = m_boundsFactory.split( bounds, medianPoint, 0 );
-
   // Recursively create subtrees
   return new SplitNode(
-      bounds,
       medianPoint,
-      createSubTree( *left, boundsPair.first ),
-      createSubTree( *right, boundsPair.second )
+      createSubTree( *left ),
+      createSubTree( *right ),
+      m_boundsFactory
       );
 }
 
@@ -108,7 +152,7 @@ Tree* TreeFactory::create( const Subset& points )
   Subset p( points );
 
   // Create the tree!
-  return new Tree( createSubTree( p, m_boundsFactory.createBounds( points ) ) );
+  return new Tree( createSubTree( p ), m_boundsFactory );
 }
 
 

@@ -14,6 +14,16 @@ public:
     return data[ index ];
   }
 
+  Point2 operator-( const Point2& point ) const
+  {
+    return Point2( x - point.x, y - point.y );
+  }
+
+  float lengthSquared() const
+  {
+    return x*x + y*y;
+  }
+
 public:
 
   union {

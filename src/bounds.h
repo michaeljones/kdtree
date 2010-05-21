@@ -18,6 +18,24 @@ public:
   const Point2& max() const { return m_max; } 
   const Point2& min() const { return m_min; } 
 
+  bool contains( const Point2& point ) const
+  {
+    if ( m_min.x > point.x ) return false;
+    if ( m_min.y > point.y ) return false;
+    if ( m_max.x < point.x ) return false;
+    if ( m_max.y < point.y ) return false;
+
+    return true;
+  }
+
+  Point2 furthestPoint( const Point2& point ) const
+  {
+    return Point2( 
+        point.x - m_min.x > point.x - m_max.x ? m_min.x : m_max.x,
+        point.y - m_min.y > point.y - m_max.y ? m_min.y : m_max.y
+        );
+  }
+
 private:
 
   const Point2 m_min;
