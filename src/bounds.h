@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <limits>
+#include <iostream>
 
 namespace kd 
 {
@@ -34,6 +35,17 @@ public:
         point.x - m_min.x > point.x - m_max.x ? m_min.x : m_max.x,
         point.y - m_min.y > point.y - m_max.y ? m_min.y : m_max.y
         );
+  }
+
+  Point2 nearestPoint( Point2 point ) const 
+  {
+    if ( point.x < m_min.x ) point.x = m_min.x;
+    if ( point.y < m_min.y ) point.y = m_min.y;
+
+    if ( point.x > m_max.x ) point.x = m_max.x;
+    if ( point.y > m_max.y ) point.y = m_max.y;
+
+    return point;
   }
 
 private:

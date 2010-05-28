@@ -12,11 +12,10 @@ int main( int argc, char** argv )
 
   srand48( 0 );
 
-  for ( unsigned int i=0; i<10; ++i )
+  for ( unsigned int i=0; i<1000; ++i )
   {
     double x = drand48();
     double y = drand48();
-    std::cerr << "Adding " << x << " " << y << std::endl;
     points.push_back( Point2( x, y ) );
   }
 
@@ -25,23 +24,16 @@ int main( int argc, char** argv )
 
   kd::Tree* tree = treeFactory.create( points );
 
-  for ( unsigned int i=0; i<10; ++i )
+  for ( unsigned int i=0; i<1000; ++i )
   {
     double x = drand48();
     double y = drand48();
-    std::cerr << "Looking up " << x << " " << y << std::endl;
     Point2 point( x, y );
 
     kd::Bounds bounds( Point2( -2.0, -2.0 ), Point2( 2.0, 2.0 ) );
     kd::NeighbourData neighbourData = tree->nearestNeighbour( point, bounds );
 
-    if ( neighbourData.found ) 
-    {
-      std::cerr << "Found point at " << neighbourData.point.x
-        << " " << neighbourData.point.y
-        << " ( distanceSq: " << neighbourData.distanceSq << " ) "  << std::endl;
-    }
-    else
+    if ( ! neighbourData.found ) 
     {
       std::cerr << "Failed to find nearest point" << std::endl;
     }
@@ -50,7 +42,7 @@ int main( int argc, char** argv )
     Point2 sep = point - points[ 0 ];
     float distance = sep.x*sep.x + sep.y*sep.y;
     Point2 nearest = points[ 0 ];
-    for ( unsigned int i=1; i<10; ++i )
+    for ( unsigned int i=1; i<1000; ++i )
     {
       sep = point - points[ i ];
       float new_distance = sep.x*sep.x + sep.y*sep.y;
@@ -61,9 +53,10 @@ int main( int argc, char** argv )
       }
     }
 
-    std::cerr << "Nearest is at  " << nearest.x << " " << nearest.y 
-        << " ( distanceSq: " << distance << " ) "  << std::endl;
-    
+    if ( nearest.x != neighbourData.point.x || nearest.y != neighbourData.point.y )
+    {
+      std::cerr << "Error - Found incorrect point for lookup." << std::endl;
+    }
   }
 
   std::cerr << "Completed Testing" << std::endl;

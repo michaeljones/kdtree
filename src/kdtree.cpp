@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 namespace kd
 {
@@ -12,7 +13,7 @@ public:
   Node() {};
   virtual ~Node() {};
 
-  virtual NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const = 0;
+  virtual NeighbourData nearest( const Point2& point, NeighbourData data, const Bounds& bounds ) const = 0;
 
 };
 
@@ -21,27 +22,59 @@ public:
 class SplitNode : public Node
 {
 public:
-  SplitNode( const Point2& point, Node* left, Node* right, const BoundsFactory& boundsFactory )
+  SplitNode( const Point2& pivot, Node* left, Node* right, const BoundsFactory& boundsFactory )
    : m_left( left ),
      m_right( right ),
-     m_point( point ),
+     m_pivot( pivot ),
      m_boundsFactory( boundsFactory )
      {}
 
-  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  NeighbourData nearest( const Point2& target, NeighbourData data, const Bounds& bounds ) const
   {
-    BoundsPair boundsPair = m_boundsFactory.split( bounds, m_point, 0 );
-
-    Point2 sep = m_point - point;
+    // Check if the node's pivot is our new nearest neighbour
+    Point2 sep = m_pivot - target;
     float distanceSq = sep.lengthSquared();
 
     if ( distanceSq < data.distanceSq )
-      data = NeighbourData( true, m_point, distanceSq );
+      data = NeighbourData( true, m_pivot, distanceSq );
 
-    if ( boundsPair.first.contains( point ) )
-      return m_left->nearest( point, data, boundsPair.first );
-    else
-      return m_right->nearest( point, data, boundsPair.second );
+    // Split the bounds based on the node's pivot 
+    BoundsPair boundsPair = m_boundsFactory.split( bounds, m_pivot, 0 );
+
+    // Find out which bound half the target is in
+    // and so decide our first bound and node to check
+    bool inFirst = boundsPair.first.contains( target );
+    const Bounds& firstBounds( inFirst ? boundsPair.first : boundsPair.second );
+    const Bounds& secondBounds( inFirst ? boundsPair.second : boundsPair.first );
+
+    const Node* firstNode( inFirst ? m_left : m_right );
+    const Node* secondNode( inFirst ? m_right : m_left );
+
+    // Find the nearest point in the first bound
+    NeighbourData firstData = firstNode->nearest( target, data, firstBounds );
+
+    // Check if it worth looking in the second bounds
+    // It is worth it if some of the second bounds line within
+    // our current distanceSq radius
+    const Point2 nearestPointInBound = secondBounds.nearestPoint( target );
+
+    sep = nearestPointInBound - target;
+    distanceSq = sep.lengthSquared();
+
+    if ( distanceSq < firstData.distanceSq )
+    {
+      // Worth checking second bounds
+      NeighbourData secondData = secondNode->nearest( target, firstData, secondBounds );
+
+      if ( secondData.distanceSq < firstData.distanceSq )
+      {
+        // Point in second bounds is closest
+        return secondData;
+      }
+    }
+
+    // Closest point in first bounds is closest
+    return firstData;
   }
 
 private:
@@ -49,7 +82,7 @@ private:
   const Node* m_left;
   const Node* m_right;
 
-  const Point2 m_point;
+  const Point2 m_pivot;
   const BoundsFactory m_boundsFactory;
 };
 
@@ -59,11 +92,10 @@ class EmptyNode : public Node
 public:
   EmptyNode() {}
 
-  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  NeighbourData nearest( const Point2& target, NeighbourData data, const Bounds& bounds ) const
   {
     return data;
   }
-
 
 };
 
@@ -74,9 +106,9 @@ public:
   SingleNode( const Point2& p )
    : m_point( p ) {}
 
-  NeighbourData nearest( Point2 point, NeighbourData data, Bounds bounds ) const
+  NeighbourData nearest( const Point2& target, NeighbourData data, const Bounds& bounds ) const
   {
-    Point2 sep = m_point - point;
+    Point2 sep = m_point - target;
     float distanceSq = sep.lengthSquared();
 
     if ( distanceSq < data.distanceSq )
@@ -84,8 +116,6 @@ public:
 
     return data;
   }
-
-
 
 private:
 
@@ -96,16 +126,17 @@ private:
 
 bool cmp( const Point2 a, const Point2 b )
 {
-  return a.x > b.x;
+  return a.x < b.x;
 }
 
-NeighbourData Tree::nearestNeighbour( Point2 point, Bounds bounds ) const
+NeighbourData Tree::nearestNeighbour( const Point2& target, const Bounds& bounds ) const
 {
-  Point2 furthest = bounds.furthestPoint( point );
-  float maxDistanceSq = furthest.x*furthest.x + furthest.y*furthest.y;
-  NeighbourData data( false, Point2( 0.0, 0.0 ), maxDistanceSq );
+  Point2 furthest = bounds.furthestPoint( target );
+  Point2 sep = furthest - target;
+  float maxDistanceSq = sep.x*sep.x + sep.y*sep.y;
+  NeighbourData data( false, furthest, maxDistanceSq );
 
-  return m_node->nearest( point, data, bounds );
+  return m_node->nearest( target, data, bounds );
 }
 
 
@@ -125,6 +156,9 @@ Node* TreeFactory::createSubTree( Subset& subset )
   }
 
   std::sort( subset.begin(), subset.end(), cmp );
+
+  Subset::iterator it = subset.begin();
+  Subset::iterator end = subset.end();
 
   int medianIdx = int( subset.size() / 2.0f );
 

@@ -28,7 +28,7 @@ public:
   Tree( Node* node, const BoundsFactory& boundsFactory )
    : m_node( node ), m_boundsFactory( boundsFactory ) {}
 
-  NeighbourData nearestNeighbour( Point2 point, Bounds bounds ) const;
+  NeighbourData nearestNeighbour( const Point2& target, const Bounds& bounds ) const;
 
 private:
 
