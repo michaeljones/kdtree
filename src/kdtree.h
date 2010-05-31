@@ -1,61 +1,137 @@
 #ifndef KDTREE
 #define KDTREE
 
-#include "Point2.h"
 #include "bounds.h"
+#include "Node.h"
+#include "Measurer.h"
 
 #include <vector>
+#include <algorithm>
 
 namespace kd 
 {
 
-struct NeighbourData
-{
-  NeighbourData( bool f, Point2 p, float d )
-    : found( f ), point( p ), distanceSq( d ) {}
-
-  bool found;
-  Point2 point;
-  float distanceSq;
-};
-
-class Node;
-
+template< typename P, unsigned int DIM >
 class Tree
 {
 public:
 
-  Tree( Node* node, const BoundsFactory& boundsFactory )
-   : m_node( node ), m_boundsFactory( boundsFactory ) {}
+  Tree( Node< P, DIM >* node, const Measurer& measurer, const BoundsFactory& boundsFactory )
+   : m_node( node ), m_measurer( measurer ), m_boundsFactory( boundsFactory ) {}
 
-  NeighbourData nearestNeighbour( const Point2& target, const Bounds& bounds ) const;
+  NeighbourData< P > nearestNeighbour( const P& target, const Bounds< P, DIM >& bounds ) const;
 
 private:
 
-  Node* m_node;
+  Node< P, DIM >* m_node;
+  const Measurer m_measurer;
   const BoundsFactory m_boundsFactory;
 
 };
+
+template< typename P, unsigned int DIM >
+NeighbourData< P > Tree< P, DIM >::nearestNeighbour(
+    const P& target,
+    const Bounds< P, DIM >& bounds
+    ) const
+{
+  P farthest = bounds.farthestPoint( target );
+  float maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
+  NeighbourData< P > data( false, farthest, maxDistanceSq );
+
+  return m_node->nearest( target, data, bounds );
+}
+
+
 
 
 class TreeFactory
 {
 public:
 
-  TreeFactory( const BoundsFactory& boundsFactory )
-  : m_boundsFactory( boundsFactory ) {};
+  TreeFactory( const Measurer& measurer, const BoundsFactory& boundsFactory )
+  : m_measurer( measurer ), m_boundsFactory( boundsFactory ) {};
 
-  Tree* create( const std::vector< Point2 >& points );
-
-private:
-
-  Node* createSubTree( std::vector< Point2 >& points );
+  template< typename P, unsigned int DIM >
+  Tree< P, DIM >* create( const std::vector< P >& points );
 
 private:
 
+  template< typename P, unsigned int DIM >
+  Node< P, DIM >* createSubTree( std::vector< P >& points );
+
+private:
+
+  const Measurer m_measurer;
   const BoundsFactory m_boundsFactory;
-
 };
+
+
+template< typename P >
+struct PointCompare
+{
+  PointCompare( const unsigned int dimension )
+    : dim( dimension ) {}
+
+  bool operator()( const P& a, const P& b ) const
+  {
+    return a[ dim ] < b[ dim ];
+  }
+
+  unsigned int dim;
+};
+
+
+
+template< typename P, unsigned int DIM >
+Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >& subset )
+{
+  if ( subset.size() == 0 )
+  {
+    return new EmptyNode< P, DIM >();
+  }
+
+  if ( subset.size() == 1 )
+  {
+    return new SingleNode< P, DIM >( subset[ 0 ], m_measurer );
+  }
+
+  PointCompare< P > cmp( 0 );
+  std::sort( subset.begin(), subset.end(), cmp );
+
+  typename std::vector< P >::iterator it = subset.begin();
+  typename std::vector< P >::iterator end = subset.end();
+
+  int medianIdx = int( subset.size() / 2.0f );
+
+  P medianPoint = subset[ medianIdx ];
+
+  // TODO: Compress creation and copy into creation from iterators
+  std::vector< P >* left = new std::vector< P >( medianIdx );
+  std::vector< P >* right = new std::vector< P >( subset.size() - ( medianIdx + 1 ) );
+
+  // TODO: Check for overrunning indicies
+  std::copy( subset.begin(), subset.begin() + medianIdx, left->begin() );
+  std::copy( subset.begin() + medianIdx + 1, subset.end(), right->begin() );
+
+  return new SplitNode< P, DIM >(
+      medianPoint,
+      createSubTree< P, DIM >( *left ),
+      createSubTree< P, DIM >( *right ),
+      m_measurer,
+      m_boundsFactory
+      );
+}
+
+template< typename P, unsigned int DIM >
+Tree< P, DIM >* TreeFactory::create( const std::vector< P >& points )
+{
+  std::vector< P > p( points );
+
+  // Create the tree!
+  return new Tree< P, DIM >( createSubTree< P, DIM >( p ), m_measurer, m_boundsFactory );
+}
+
 
 
 };

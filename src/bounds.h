@@ -1,99 +1,125 @@
 #ifndef BOUNDS
 #define BOUNDS
 
-#include "Point2.h"
-
 #include <vector>
 #include <limits>
-#include <iostream>
 
 namespace kd 
 {
 
+template< typename P, unsigned int DIM >
 class Bounds
 {
 public:
-  Bounds( const Point2& min, const Point2& max )
+  Bounds( const P& min, const P& max )
   : m_min( min ), m_max( max ) {}
 
-  const Point2& max() const { return m_max; } 
-  const Point2& min() const { return m_min; } 
+  const P& max() const { return m_max; } 
+  const P& min() const { return m_min; } 
 
-  bool contains( const Point2& point ) const
+  bool contains( const P& point ) const
   {
-    if ( m_min.x > point.x ) return false;
-    if ( m_min.y > point.y ) return false;
-    if ( m_max.x < point.x ) return false;
-    if ( m_max.y < point.y ) return false;
+    for ( unsigned int i=0; i<DIM; ++i )
+    {
+      if ( m_min[ i ] > point[ i ] ) return false;
+      if ( m_max[ i ] < point[ i ] ) return false;
+    }
 
     return true;
   }
 
-  Point2 furthestPoint( const Point2& point ) const
+  P farthestPoint( P point ) const
   {
-    return Point2( 
-        point.x - m_min.x > point.x - m_max.x ? m_min.x : m_max.x,
-        point.y - m_min.y > point.y - m_max.y ? m_min.y : m_max.y
-        );
+    for ( unsigned int i=0; i<DIM; ++i )
+    {
+        point[ i ] = ( ( point[ i ] - m_min[ i ] ) > ( point[ i ] - m_max[ i ] ) ) ? m_min[ i ] : m_max[ i ];
+    }
+
+    return point;
   }
 
-  Point2 nearestPoint( Point2 point ) const 
+  P nearestPoint( P point ) const 
   {
-    if ( point.x < m_min.x ) point.x = m_min.x;
-    if ( point.y < m_min.y ) point.y = m_min.y;
-
-    if ( point.x > m_max.x ) point.x = m_max.x;
-    if ( point.y > m_max.y ) point.y = m_max.y;
+    for ( unsigned int i=0; i<DIM; ++i )
+    {
+      if ( point[ i ] < m_min[ i ] ) point[ i ] = m_min[ i ];
+      if ( point[ i ] > m_max[ i ] ) point[ i ] = m_max[ i ];
+    }
 
     return point;
   }
 
 private:
 
-  const Point2 m_min;
-  const Point2 m_max;
+  const P m_min;
+  const P m_max;
 };
 
 
-typedef std::pair< Bounds, Bounds > BoundsPair;
+
+template< typename P, unsigned int DIM >
+class BoundsPair
+{
+public:
+
+  BoundsPair( Bounds< P, DIM > l, Bounds< P, DIM > r )
+   : left( l ), right( r ) {}
+
+  Bounds< P, DIM > left;
+  Bounds< P, DIM > right;
+
+};
 
 class BoundsFactory
 {
 public:
   BoundsFactory() {};
 
-  Bounds createBounds( const std::vector< Point2 >& points ) const;
+  template< typename P, unsigned int DIM >
+  Bounds< P, DIM > createBounds( const std::vector< P >& points ) const;
 
-  BoundsPair split( const Bounds& bounts, const Point2& point, const int dimension ) const;
+  template< typename P, unsigned int DIM >
+  BoundsPair< P, DIM > split( const Bounds< P, DIM >& bounds, const P& point, const int dimension ) const;
 
 };
 
 
-Bounds BoundsFactory::createBounds( const std::vector< Point2 >& points ) const
+template< typename P, unsigned int DIM >
+Bounds< P, DIM > BoundsFactory::createBounds( const std::vector< P >& points ) const
 {
-  std::vector< Point2 >::const_iterator it = points.begin();
-  std::vector< Point2 >::const_iterator end = points.end();
+  typename P::base_type min[ DIM ];
+  typename P::base_type max[ DIM ];
 
-  Point2 min( std::numeric_limits< float >::max(), std::numeric_limits< float >::max() );
-  Point2 max( - std::numeric_limits< float >::max(), - std::numeric_limits< float >::max() );
+  for ( unsigned int i=0; i<DIM; ++i )
+  {
+    min[ i ] = std::numeric_limits< typename P::base_type >::max();
+    max[ i ] = - std::numeric_limits< typename P::base_type >::max();
+  }
+
+  typename std::vector< P >::const_iterator it = points.begin();
+  typename std::vector< P >::const_iterator end = points.end();
 
   for ( ; it != end; ++it )
   {
-    max = Point2( it->x > max.x ? it->x : max.x, it->y > max.y ? it->y : max.y );
-    min = Point2( it->x < min.x ? it->x : min.x, it->y < min.y ? it->y : min.y );
+    for ( unsigned int i=0; i<DIM; ++i )
+    {
+      min[ i ] = (*it)[ i ] < min[ i ] ? (*it)[ i ] : min[ i ];
+      max[ i ] = (*it)[ i ] > max[ i ] ? (*it)[ i ] : max[ i ];
+    }
   }
 
-  return Bounds( min, max );
+  return Bounds< P, DIM >( P( min ), P( max ) );
 }
 
-BoundsPair BoundsFactory::split(
-    const Bounds& bounds,
-    const Point2& point,
+template< typename P, unsigned int DIM >
+BoundsPair< P, DIM > BoundsFactory::split(
+    const Bounds< P, DIM >& bounds,
+    const P& point,
     const int dimension
     ) const
 {
-  float maxcoords[2] = { 0.0, 0.0 };
-  float mincoords[2] = { 0.0, 0.0 };
+  typename P::base_type maxcoords[ DIM ];
+  typename P::base_type mincoords[ DIM ];
 
   for ( unsigned int i=0; i<2; ++i )
   {
@@ -109,10 +135,10 @@ BoundsPair BoundsFactory::split(
     }
   }
 
-  Bounds lower( bounds.min(), Point2( maxcoords ) );
-  Bounds upper( Point2( mincoords ), bounds.max() );
+  Bounds< P, DIM > lower( bounds.min(), P( maxcoords ) );
+  Bounds< P, DIM > upper( P( mincoords ), bounds.max() );
 
-  return BoundsPair( lower, upper );
+  return BoundsPair< P, DIM >( lower, upper );
 }
 
 };
