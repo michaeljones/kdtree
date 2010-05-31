@@ -2,7 +2,7 @@
 #define NODE
 
 #include "Measurer.h"
-#include "bounds.h"
+#include "Bounds.h"
 #include "Data.h" 
 
 namespace kd

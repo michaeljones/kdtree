@@ -1,5 +1,5 @@
-#ifndef POINT2
-#define POINT2
+#ifndef POINT
+#define POINT
 
 
 class Point2 

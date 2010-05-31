@@ -1,7 +1,7 @@
 #ifndef KDTREE
 #define KDTREE
 
-#include "bounds.h"
+#include "Bounds.h"
 #include "Node.h"
 #include "Measurer.h"
 

@@ -1,3 +1,3 @@
 
-Program( "testsuite/main.cpp", CPPPATH=["src"] )
+Program( "testsuite/main.cpp", CPPPATH=["."] )
 

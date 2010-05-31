@@ -1,6 +1,6 @@
 
-#include <kdtree.h>
-#include <Point2.h>
+#include <kdtree/Tree.h>
+#include "Point.h"
 
 #include <stdlib.h>
 
