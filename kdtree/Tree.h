@@ -19,6 +19,11 @@ public:
   Tree( Node< P, DIM >* node, const Measurer& measurer, const BoundsFactory& boundsFactory )
    : m_node( node ), m_measurer( measurer ), m_boundsFactory( boundsFactory ) {}
 
+  ~Tree()
+  {
+    delete m_node;
+  }
+
   NeighbourData< P > nearestNeighbour( const P& target, const Bounds< P, DIM >& bounds ) const;
 
 private:
@@ -58,7 +63,7 @@ public:
 private:
 
   template< typename P, unsigned int DIM >
-  Node< P, DIM >* createSubTree( std::vector< P >& points );
+  Node< P, DIM >* createSubTree( std::vector< P >* points );
 
 private:
 
@@ -84,40 +89,48 @@ struct PointCompare
 
 
 template< typename P, unsigned int DIM >
-Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >& subset )
+Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >* subset )
 {
-  if ( subset.size() == 0 )
+  if ( subset->size() == 0 )
   {
+    // Clean up subset
+    delete subset;
     return new EmptyNode< P, DIM >();
   }
 
-  if ( subset.size() == 1 )
+  if ( subset->size() == 1 )
   {
-    return new SingleNode< P, DIM >( subset[ 0 ], m_measurer );
+    // Clean up subset
+    P point = (*subset)[ 0 ];
+    delete subset;
+    return new SingleNode< P, DIM >( point, m_measurer );
   }
 
   PointCompare< P > cmp( 0 );
-  std::sort( subset.begin(), subset.end(), cmp );
+  std::sort( subset->begin(), subset->end(), cmp );
 
-  typename std::vector< P >::iterator it = subset.begin();
-  typename std::vector< P >::iterator end = subset.end();
+  typename std::vector< P >::iterator it = subset->begin();
+  typename std::vector< P >::iterator end = subset->end();
 
-  int medianIdx = int( subset.size() / 2.0f );
+  int medianIdx = int( subset->size() / 2.0f );
 
-  P medianPoint = subset[ medianIdx ];
+  P medianPoint = (*subset)[ medianIdx ];
 
   // TODO: Compress creation and copy into creation from iterators
   std::vector< P >* left = new std::vector< P >( medianIdx );
-  std::vector< P >* right = new std::vector< P >( subset.size() - ( medianIdx + 1 ) );
+  std::vector< P >* right = new std::vector< P >( subset->size() - ( medianIdx + 1 ) );
 
   // TODO: Check for overrunning indicies
-  std::copy( subset.begin(), subset.begin() + medianIdx, left->begin() );
-  std::copy( subset.begin() + medianIdx + 1, subset.end(), right->begin() );
+  std::copy( subset->begin(), subset->begin() + medianIdx, left->begin() );
+  std::copy( subset->begin() + medianIdx + 1, subset->end(), right->begin() );
+
+  // Clean up previous subset
+  delete subset;
 
   return new SplitNode< P, DIM >(
       medianPoint,
-      createSubTree< P, DIM >( *left ),
-      createSubTree< P, DIM >( *right ),
+      createSubTree< P, DIM >( left ),
+      createSubTree< P, DIM >( right ),
       m_measurer,
       m_boundsFactory
       );
@@ -126,7 +139,9 @@ Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >& subset )
 template< typename P, unsigned int DIM >
 Tree< P, DIM >* TreeFactory::create( const std::vector< P >& points )
 {
-  std::vector< P > p( points );
+  // Dynamically allocate it so we can clean up the memory 
+  // faster than it might otherwise be cleaned
+  std::vector< P >* p = new std::vector< P >( points );
 
   // Create the tree!
   return new Tree< P, DIM >( createSubTree< P, DIM >( p ), m_measurer, m_boundsFactory );

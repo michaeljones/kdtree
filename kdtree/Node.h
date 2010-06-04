@@ -43,6 +43,12 @@ public:
      m_boundsFactory( boundsFactory )
      {}
 
+  ~SplitNode()
+  {
+    delete m_left;
+    delete m_right;
+  }
+
   NeighbourData< P > nearest( const P& target, NeighbourData< P > data, const Bounds< P, DIM >& bounds ) const
   {
     // Check if the node's pivot is our new nearest neighbour

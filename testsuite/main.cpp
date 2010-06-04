@@ -3,6 +3,7 @@
 #include "Point.h"
 
 #include <stdlib.h>
+#include <memory>
 
 #include <iostream>
 
@@ -23,7 +24,7 @@ int main( int argc, char** argv )
   kd::Measurer measurer;
   kd::TreeFactory treeFactory( measurer, boundsFactory );
 
-  kd::Tree< Point2, 2 >* tree = treeFactory.create< Point2, 2 >( points );
+  std::auto_ptr< kd::Tree< Point2, 2 > > tree( treeFactory.create< Point2, 2 >( points ) );
 
   float min[2] = { -2.0f, -2.0f };
   float max[2] = { 2.0f, 2.0f };

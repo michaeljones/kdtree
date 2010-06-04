@@ -1,3 +1,3 @@
 
-Program( "testsuite/main.cpp", CPPPATH=["."] )
+Program( "testsuite/main.cpp", CPPPATH=["."], CPPFLAGS=['-g'] )
 
