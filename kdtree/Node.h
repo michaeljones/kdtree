@@ -21,6 +21,11 @@ public:
       const Bounds< P, DIM >& bounds
       ) const = 0;
 
+  virtual MultiNeighbourData< P > nearestNeighbours(
+      const P& target,
+      MultiNeighbourData< P > data,
+      const Bounds< P, DIM >& bounds
+      ) const = 0;
 };
 
 
@@ -62,12 +67,12 @@ public:
 
     // Find out which bound half the target is in
     // and so decide our first bound and node to check
-    bool inFirst = boundsPair.left.contains( target );
-    const Bounds< P, DIM >& leftBounds( inFirst ? boundsPair.left : boundsPair.right );
-    const Bounds< P, DIM >& rightBounds( inFirst ? boundsPair.right : boundsPair.left );
+    bool inLeft = boundsPair.left.contains( target );
+    const Bounds< P, DIM >& leftBounds( inLeft ? boundsPair.left : boundsPair.right );
+    const Bounds< P, DIM >& rightBounds( inLeft ? boundsPair.right : boundsPair.left );
 
-    const Node< P, DIM >* leftNode( inFirst ? m_left : m_right );
-    const Node< P, DIM >* rightNode( inFirst ? m_right : m_left );
+    const Node< P, DIM >* leftNode( inLeft ? m_left : m_right );
+    const Node< P, DIM >* rightNode( inLeft ? m_right : m_left );
 
     // Find the nearest point in the left bound
     NeighbourData< P > leftData = leftNode->nearest( target, data, leftBounds );
@@ -95,6 +100,52 @@ public:
     return leftData;
   }
 
+
+  MultiNeighbourData< P > nearestNeighbours(
+      const P& target,
+      MultiNeighbourData< P > data,
+      const Bounds< P, DIM >& bounds
+      ) const
+  {
+    // Add the node's pivot if necessary
+    float distanceSq = m_measurer.distanceSq< P, DIM >( m_pivot, target );
+    data.update( m_pivot, distanceSq );
+
+    // Split the bounds based on the node's pivot 
+    BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, m_pivot, 0 );
+
+    // Find out which bound half the target is in
+    // and so decide our first bound and node to check
+    bool inLeft = boundsPair.left.contains( target );
+    const Bounds< P, DIM >& leftBounds( inLeft ? boundsPair.left : boundsPair.right );
+    const Bounds< P, DIM >& rightBounds( inLeft ? boundsPair.right : boundsPair.left );
+
+    const Node< P, DIM >* leftNode( inLeft ? m_left : m_right );
+    const Node< P, DIM >* rightNode( inLeft ? m_right : m_left );
+
+    // Find the nearest point in the left bound
+    MultiNeighbourData< P > leftData = leftNode->nearestNeighbours( target, data, leftBounds );
+
+    // Check if it worth looking in the right bounds
+    // It is worth it if some of the right bounds line within
+    // our current distanceSq radius
+    const P nearestPointInBound = rightBounds.nearestPoint( target );
+
+    distanceSq = m_measurer.distanceSq< P, DIM >( nearestPointInBound, target );
+
+    if ( distanceSq < leftData.maxDistanceSq() || leftData.incomplete() )
+    {
+      // Worth checking right bounds
+      MultiNeighbourData< P > rightData = rightNode->nearestNeighbours( target, leftData, rightBounds );
+      return rightData;
+    }
+
+    // Closest point in left bounds is closest
+    return leftData;
+  }
+
+
+
 private:
 
   const Node< P, DIM >* m_left;
@@ -113,6 +164,15 @@ public:
   EmptyNode() {}
 
   NeighbourData< P > nearest( const P& target, NeighbourData< P > data, const Bounds< P, DIM >& bounds ) const
+  {
+    return data;
+  }
+
+  MultiNeighbourData< P > nearestNeighbours(
+      const P& target,
+      MultiNeighbourData< P > data,
+      const Bounds< P, DIM >& bounds
+      ) const
   {
     return data;
   }
@@ -136,6 +196,18 @@ public:
 
     return data;
   }
+
+  MultiNeighbourData< P > nearestNeighbours(
+      const P& target,
+      MultiNeighbourData< P > data,
+      const Bounds< P, DIM >& bounds 
+      ) const
+  {
+    float distanceSq = m_measurer.distanceSq< P, DIM >( m_point, target );
+    data.update( m_point, distanceSq );
+    return data;
+  }
+
 
 private:
 

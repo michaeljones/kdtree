@@ -26,6 +26,12 @@ public:
 
   NeighbourData< P > nearestNeighbour( const P& target, const Bounds< P, DIM >& bounds ) const;
 
+  MultiNeighbourData< P > nearestNeighbours(
+      unsigned int num,
+      const P& target,
+      const Bounds< P, DIM >& bounds
+      ) const;
+
 private:
 
   Node< P, DIM >* m_node;
@@ -41,13 +47,26 @@ NeighbourData< P > Tree< P, DIM >::nearestNeighbour(
     ) const
 {
   P farthest = bounds.farthestPoint( target );
-  float maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
+  typename P::base_type maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
   NeighbourData< P > data( false, farthest, maxDistanceSq );
 
   return m_node->nearest( target, data, bounds );
 }
 
 
+template< typename P, unsigned int DIM >
+MultiNeighbourData< P > Tree< P, DIM >::nearestNeighbours(
+    unsigned int num,
+    const P& target,
+    const Bounds< P, DIM >& bounds
+    ) const
+{
+  P farthest = bounds.farthestPoint( target );
+  typename P::base_type maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
+  MultiNeighbourData< P > data( num, maxDistanceSq );
+
+  return m_node->nearestNeighbours( target, data, bounds );
+}
 
 
 class TreeFactory
