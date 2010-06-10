@@ -57,7 +57,7 @@ public:
   NeighbourData< P > nearest( const P& target, NeighbourData< P > data, const Bounds< P, DIM >& bounds ) const
   {
     // Check if the node's pivot is our new nearest neighbour
-    float distanceSq = m_measurer.distanceSq< P, DIM >( m_pivot, target );
+    typename P::base_type distanceSq = m_measurer.distanceSq< P, DIM >( m_pivot, target );
 
     if ( distanceSq < data.distanceSq )
       data = NeighbourData< P >( true, m_pivot, distanceSq );
@@ -108,7 +108,7 @@ public:
       ) const
   {
     // Add the node's pivot if necessary
-    float distanceSq = m_measurer.distanceSq< P, DIM >( m_pivot, target );
+    typename P::base_type distanceSq = m_measurer.distanceSq< P, DIM >( m_pivot, target );
     data.update( m_pivot, distanceSq );
 
     // Split the bounds based on the node's pivot 
@@ -189,7 +189,7 @@ public:
 
   NeighbourData< P > nearest( const P& target, NeighbourData< P > data, const Bounds< P, DIM >& bounds ) const
   {
-    float distanceSq = m_measurer.distanceSq< P, DIM >( m_point, target );
+    typename P::base_type distanceSq = m_measurer.distanceSq< P, DIM >( m_point, target );
 
     if ( distanceSq < data.distanceSq )
       data = NeighbourData< P >( true, m_point, distanceSq );
@@ -203,7 +203,7 @@ public:
       const Bounds< P, DIM >& bounds 
       ) const
   {
-    float distanceSq = m_measurer.distanceSq< P, DIM >( m_point, target );
+    typename P::base_type distanceSq = m_measurer.distanceSq< P, DIM >( m_point, target );
     data.update( m_point, distanceSq );
     return data;
   }
