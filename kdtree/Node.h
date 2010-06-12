@@ -36,12 +36,14 @@ class SplitNode : public Node< P, DIM >
 public:
   SplitNode(
       const P& pivot,
+      unsigned int dim,
       Node< P, DIM >* left,
       Node< P, DIM >* right,
       const Measurer& measurer,
       const BoundsFactory& boundsFactory
       )
-   : m_left( left ),
+   : m_dim( dim ),
+     m_left( left ),
      m_right( right ),
      m_pivot( pivot ),
      m_measurer( measurer ),
@@ -63,7 +65,7 @@ public:
       data = NeighbourData< P >( true, m_pivot, distanceSq );
 
     // Split the bounds based on the node's pivot 
-    BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, m_pivot, 0 );
+    BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, m_pivot, m_dim );
 
     // Find out which bound half the target is in
     // and so decide our first bound and node to check
@@ -112,7 +114,7 @@ public:
     data.update( m_pivot, distanceSq );
 
     // Split the bounds based on the node's pivot 
-    BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, m_pivot, 0 );
+    BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, m_pivot, m_dim );
 
     // Find out which bound half the target is in
     // and so decide our first bound and node to check
@@ -147,6 +149,8 @@ public:
 
 
 private:
+
+  const unsigned int m_dim;
 
   const Node< P, DIM >* m_left;
   const Node< P, DIM >* m_right;

@@ -22,7 +22,7 @@ public:
 private:
 
   template< typename P, unsigned int DIM >
-  Node< P, DIM >* createSubTree( std::vector< P >* points );
+  Node< P, DIM >* createSubTree( std::vector< P >* points, Bounds< P, DIM >& bounds );
 
 private:
 
@@ -48,7 +48,7 @@ struct PointCompare
 
 
 template< typename P, unsigned int DIM >
-Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >* subset )
+Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >* subset, Bounds< P, DIM >& bounds )
 {
   if ( subset->size() == 0 )
   {
@@ -65,7 +65,8 @@ Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >* subset )
     return new SingleNode< P, DIM >( point, m_measurer );
   }
 
-  PointCompare< P > cmp( 0 );
+  unsigned int dim = bounds.longestDimension();
+  PointCompare< P > cmp( dim );
   std::sort( subset->begin(), subset->end(), cmp );
 
   typename std::vector< P >::iterator it = subset->begin();
@@ -86,10 +87,13 @@ Node< P, DIM >* TreeFactory::createSubTree( std::vector< P >* subset )
   // Clean up previous subset
   delete subset;
 
+  BoundsPair< P, DIM > boundsPair = m_boundsFactory.split( bounds, medianPoint, dim );
+
   return new SplitNode< P, DIM >(
       medianPoint,
-      createSubTree< P, DIM >( left ),
-      createSubTree< P, DIM >( right ),
+      dim,
+      createSubTree< P, DIM >( left, boundsPair.left ),
+      createSubTree< P, DIM >( right, boundsPair.right ),
       m_measurer,
       m_boundsFactory
       );
@@ -101,9 +105,10 @@ Tree< P, DIM >* TreeFactory::create( const std::vector< P >& points )
   // Dynamically allocate it so we can clean up the memory 
   // faster than it might otherwise be cleaned
   std::vector< P >* p = new std::vector< P >( points );
+  Bounds< P, DIM > bounds = m_boundsFactory.createBounds< P, DIM >( *p );
 
   // Create the tree!
-  return new Tree< P, DIM >( createSubTree< P, DIM >( p ), m_measurer, m_boundsFactory );
+  return new Tree< P, DIM >( createSubTree< P, DIM >( p, bounds ), m_measurer, m_boundsFactory );
 }
 
 

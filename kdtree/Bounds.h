@@ -49,6 +49,22 @@ public:
     return point;
   }
 
+  unsigned int longestDimension() const 
+  {
+    unsigned int longestDim = 0;
+    typename P::base_type length = m_max[ 0 ] - m_min[ 0 ];
+
+    for ( unsigned int i=1; i<DIM; ++i )
+    {
+      if ( length < m_max[ i ] - m_min[ i ] )
+      {
+        longestDim = i;
+      }
+    }
+
+    return longestDim;
+  }
+
 private:
 
   const P m_min;
