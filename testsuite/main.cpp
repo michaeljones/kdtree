@@ -1,5 +1,5 @@
 
-#include <kdtree/Tree.h>
+#include <kdtree/TreeFactory.h>
 #include "Point.h"
 
 #include <stdlib.h>
