@@ -9,6 +9,9 @@
 
 namespace kd {
 
+
+/*! \brief Creates the Tree objects from a set of points
+ */
 class TreeFactory
 {
 public:
@@ -31,6 +34,8 @@ private:
 };
 
 
+/*! \brief Comparison class for sorting points by dimension
+ */
 template< typename P >
 struct PointCompare
 {

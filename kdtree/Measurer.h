@@ -4,6 +4,8 @@
 namespace kd 
 {
 
+/*! \brief Measurers the distance between two points in the tree
+ */
 class Measurer
 {
 public:
@@ -28,3 +30,4 @@ public:
 }; // namespace kd
 
 #endif // MEASURER
+

@@ -6,6 +6,8 @@
 namespace kd 
 {
 
+/*! \brief Basic data for a single nearest neighbour query
+ */
 template< typename P >
 struct NeighbourData
 {
@@ -18,11 +20,15 @@ struct NeighbourData
 };
 
 
+/*! \brief Data for a group nearest neighbours query
+ */
 template< typename P >
 class MultiNeighbourData
 {
 public:
 
+  /*! \brief Location and distance squared to a neighbour point
+   */
   struct PointDistance
   {
     PointDistance( const P& p, typename P::base_type d )
@@ -37,6 +43,9 @@ public:
   MultiNeighbourData( unsigned int num, typename P::base_type dist )
     : m_nthDistanceSq( dist ), m_maxNeighbours( num ) { }
 
+
+  /*! \brief Update neighbour data to include provide point if desired
+   */
   void update( const P& point, typename P::base_type distSq )
   {
     if ( distSq < m_nthDistanceSq )
@@ -64,16 +73,19 @@ public:
     }
   }
 
+  //! Return the distance squared to the furtherest neighbour found
   typename P::base_type maxDistanceSq() const
   {
     return m_nthDistanceSq;
   }
 
+  //! Returns true if we have not found as many neighbours as we would like
   bool incomplete() const
   {
     return m_points.size() < m_maxNeighbours;
   }
 
+  //! Returns a list of the points (and their distances) found
   const PointDistanceList& points() const
   {
     return m_points;

@@ -7,6 +7,8 @@
 namespace kd 
 {
 
+/*! \brief Handles the min and max values for an axis aliged bounding box 
+ */
 template< typename P, unsigned int DIM >
 class Bounds
 {
@@ -14,9 +16,12 @@ public:
   Bounds( const P& min, const P& max )
   : m_min( min ), m_max( max ) {}
 
+  //! Maximum extent of the bounds
   const P& max() const { return m_max; } 
+  //! Minimum extent of the bounds
   const P& min() const { return m_min; } 
 
+  //! Test if a point lies within the Bounds
   bool contains( const P& point ) const
   {
     for ( unsigned int i=0; i<DIM; ++i )
@@ -28,6 +33,8 @@ public:
     return true;
   }
 
+  /*! \brief Returns the point within the bounds which is fartherest from the provided point
+   */
   P farthestPoint( P point ) const
   {
     for ( unsigned int i=0; i<DIM; ++i )
@@ -38,6 +45,8 @@ public:
     return point;
   }
 
+  /*! \brief Returns the point within the bounds which is nearest to the provided point
+   */
   P nearestPoint( P point ) const 
   {
     for ( unsigned int i=0; i<DIM; ++i )
@@ -49,6 +58,8 @@ public:
     return point;
   }
 
+  /*! \brief Returns the index of longest dimension of the Bounds
+   */
   unsigned int longestDimension() const 
   {
     unsigned int longestDim = 0;
@@ -67,12 +78,16 @@ public:
 
 private:
 
+  //! Minimum point
   const P m_min;
+  //! Maximum point
   const P m_max;
 };
 
 
 
+/*! \brief Groups a pair of Bounds objects from a split
+ */
 template< typename P, unsigned int DIM >
 class BoundsPair
 {
@@ -86,6 +101,9 @@ public:
 
 };
 
+
+/*! \brief Creates and splits Bounds objects
+ */
 class BoundsFactory
 {
 public:

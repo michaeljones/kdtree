@@ -10,6 +10,8 @@
 namespace kd 
 {
 
+/*! \brief Tree which provides search interface
+ */
 template< typename P, unsigned int DIM >
 class Tree
 {

@@ -8,6 +8,8 @@
 namespace kd
 {
 
+/*! \brief Base class defines searching interfaces
+ */
 template< typename P, unsigned int DIM >
 class Node
 {
@@ -30,6 +32,8 @@ public:
 
 
 
+/*! \brief Represents branch points in the tree
+ */
 template< typename P, unsigned int DIM >
 class SplitNode : public Node< P, DIM >
 {
@@ -161,6 +165,8 @@ private:
 };
 
 
+/*! \brief Represents an empty terminal node in the tree
+ */
 template< typename P, unsigned int DIM >
 class EmptyNode : public Node< P, DIM >
 {
@@ -183,6 +189,8 @@ public:
 };
 
 
+/*! \brief Represents a terminal node with a single point
+ */
 template< typename P, unsigned int DIM >
 class SingleNode : public Node< P, DIM >
 {
