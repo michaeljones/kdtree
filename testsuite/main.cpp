@@ -55,7 +55,7 @@ int main( int argc, char** argv )
     // Find nearest neighbour
     kd::NeighbourData< Point2 > neighbourData = tree->nearestNeighbour( point, bounds );
 
-    if ( ! neighbourData.found ) 
+    if ( neighbourData.incomplete() ) 
     {
       std::cerr << "Failed to find nearest point" << std::endl;
     }
@@ -73,7 +73,7 @@ int main( int argc, char** argv )
       }
     }
 
-    if ( nearest[ 0 ] != neighbourData.point[ 0 ] || nearest[ 1 ] != neighbourData.point[ 1 ] )
+    if ( nearest[ 0 ] != neighbourData.point()[ 0 ] || nearest[ 1 ] != neighbourData.point()[ 1 ] )
     {
       std::cerr << "Error - Found incorrect point for lookup." << std::endl;
     }

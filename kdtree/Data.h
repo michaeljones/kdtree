@@ -6,24 +6,65 @@
 namespace kd 
 {
 
+template< typename P >
+class Data
+{
+public:
+
+  Data() {}
+
+  virtual void update( const P& point, typename P::base_type distSq ) = 0;
+
+  virtual bool incomplete() const = 0;
+
+  virtual typename P::base_type maxDistanceSq() const = 0;
+};
+
 /*! \brief Basic data for a single nearest neighbour query
  */
 template< typename P >
-struct NeighbourData
+class NeighbourData : public Data< P >
 {
-  NeighbourData( bool f, P p, typename P::base_type d )
-    : found( f ), point( p ), distanceSq( d ) {}
+public:
+  NeighbourData( typename P::base_type d )
+    : m_found( false ), m_distanceSq( d ) {}
 
-  bool found;
-  P point;
-  typename P::base_type distanceSq;
+  void update( const P& point, typename P::base_type distSq )
+  {
+    if ( distSq < m_distanceSq )
+    {
+      m_point = point;
+      m_distanceSq = distSq;
+      m_found = true;
+    }
+  }
+
+  bool incomplete() const
+  {
+    return ! m_found;
+  }
+
+  typename P::base_type maxDistanceSq() const
+  {
+    return m_distanceSq;
+  }
+
+  const P& point() const
+  {
+    return m_point;
+  }
+
+private:
+  bool m_found;
+  P m_point;
+  typename P::base_type m_distanceSq;
 };
 
 
 /*! \brief Data for a group nearest neighbours query
  */
 template< typename P >
-class MultiNeighbourData
+class MultiNeighbourData : public Data< P >
 {
 public:
 

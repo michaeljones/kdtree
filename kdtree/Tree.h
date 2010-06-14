@@ -49,9 +49,11 @@ NeighbourData< P > Tree< P, DIM >::nearestNeighbour(
 {
   P farthest = bounds.farthestPoint( target );
   typename P::base_type maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
-  NeighbourData< P > data( false, farthest, maxDistanceSq );
+  NeighbourData< P > data( maxDistanceSq );
 
-  return m_node->nearest( target, data, bounds );
+  m_node->search( target, data, bounds );
+
+  return data;
 }
 
 
@@ -66,7 +68,9 @@ MultiNeighbourData< P > Tree< P, DIM >::nearestNeighbours(
   typename P::base_type maxDistanceSq = m_measurer.distanceSq< P, DIM >( farthest, target );
   MultiNeighbourData< P > data( num, maxDistanceSq );
 
-  return m_node->nearestNeighbours( target, data, bounds );
+  m_node->search( target, data, bounds );
+
+  return data;
 }
 
 
