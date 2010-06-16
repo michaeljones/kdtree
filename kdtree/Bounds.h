@@ -13,11 +13,14 @@ template< typename P, unsigned int DIM >
 class Bounds
 {
 public:
+  
+  //! Create Bounds from min & max values
   Bounds( const P& min, const P& max )
   : m_min( min ), m_max( max ) {}
 
   //! Maximum extent of the bounds
   const P& max() const { return m_max; } 
+
   //! Minimum extent of the bounds
   const P& min() const { return m_min; } 
 
@@ -33,7 +36,7 @@ public:
     return true;
   }
 
-  /*! \brief Returns the point within the bounds which is fartherest from the provided point
+  /*! \brief Returns the point within the bounds which is farthest from the provided point
    */
   P farthestPoint( P point ) const
   {
@@ -92,13 +95,11 @@ template< typename P, unsigned int DIM >
 class BoundsPair
 {
 public:
-
   BoundsPair( Bounds< P, DIM > l, Bounds< P, DIM > r )
    : left( l ), right( r ) {}
 
   Bounds< P, DIM > left;
   Bounds< P, DIM > right;
-
 };
 
 
@@ -107,6 +108,8 @@ public:
 class BoundsFactory
 {
 public:
+
+
   BoundsFactory() {};
 
   template< typename P, unsigned int DIM >

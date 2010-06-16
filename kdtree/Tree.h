@@ -10,8 +10,7 @@
 namespace kd 
 {
 
-/*! \brief Tree which provides search interface
- */
+//! \brief Tree which provides search interface
 template< typename P, unsigned int DIM >
 class Tree
 {
@@ -25,8 +24,10 @@ public:
     delete m_node;
   }
 
+  //! Find nearest neighbour to given point
   NeighbourData< P > nearestNeighbour( const P& target, const Bounds< P, DIM >& bounds ) const;
 
+  //! Find "num" nearest neighbours to the given point
   MultiNeighbourData< P > nearestNeighbours(
       unsigned int num,
       const P& target,
