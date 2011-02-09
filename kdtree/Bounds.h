@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <limits>
+#include <math.h>
 
 namespace kd 
 {
@@ -42,7 +43,7 @@ public:
   {
     for ( unsigned int i=0; i<DIM; ++i )
     {
-        point[ i ] = ( ( point[ i ] - m_min[ i ] ) > ( point[ i ] - m_max[ i ] ) ) ? m_min[ i ] : m_max[ i ];
+        point[ i ] = ( fabs( point[ i ] - m_min[ i ] ) > fabs( m_max[ i ] - point[ i ] ) ) ? m_min[ i ] : m_max[ i ];
     }
 
     return point;
