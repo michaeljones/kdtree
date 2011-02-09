@@ -158,7 +158,7 @@ BoundsPair< P, DIM > BoundsFactory::split(
   typename P::base_type maxcoords[ DIM ];
   typename P::base_type mincoords[ DIM ];
 
-  for ( unsigned int i=0; i<2; ++i )
+  for ( unsigned int i=0; i<DIM; ++i )
   {
     if ( i == dimension )
     {
